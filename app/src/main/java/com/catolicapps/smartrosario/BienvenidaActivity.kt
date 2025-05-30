@@ -29,8 +29,8 @@ class BienvenidaActivity : AppCompatActivity() {
         tipoMisterioDelDia = obtenerMisteriosDelDia()
         tipoSeleccionado = tipoMisterioDelDia
 
-        titulo.text = "Misterio del día"
-        descripcion.text = "Hoy se rezan los Misterios ${tipoMisterioDelDia.nombre}"
+        titulo.text = "Misterios del día"
+        descripcion.text = "Hoy se rezan los Misterios ${tipoMisterioDelDia.nombre}, pero puede seleccionar otros a continuación."
 
         val opciones = TipoMisterio.values().map { it.nombre }
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, opciones)

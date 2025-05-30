@@ -10,6 +10,8 @@
     import android.view.KeyEvent
     import android.os.Build
     import android.os.VibrationEffect
+    import android.content.Intent
+    import android.view.View
 
     import com.catolicapps.smartrosario.TipoMisterio
 
@@ -36,9 +38,11 @@
             val textContadorAveMaria = findViewById<TextView>(R.id.textContadorAveMaria)
             val textMensajes = findViewById<TextView>(R.id.textMensajes)
             val btnApagarPantalla = findViewById<Button>(R.id.btnApagarPantalla)
+            //val overlayOscuro = findViewById<View>(R.id.overlayOscuro)
 
             vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
+            // CORREGIR!!!!!!
             tipoMisterioDelDia = obtenerMisteriosDelDia()
             cargarMisterios(tipoMisterioDelDia)
             mostrarMisterio(misterioActual)
@@ -63,7 +67,7 @@
                     vibrarCorto()
                 }
                 else {
-                    cuentaAveMaria++
+                    cuentaAveMaria=10
                     textContadorAveMaria.text = "Avemarías: $cuentaAveMaria"
                     textMensajes.text = "Misterio Completado"
                     vibrarLargo()
@@ -77,19 +81,16 @@
                 window.attributes = lp
                 // Mantener pantalla encencida
                 window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            }
 
-            // Si quieres avanzar con botones volumen, añade aquí también el receiver o lógica.
-            //val intent = Intent(this, RosarioService::class.java)
-            //intent.putExtra("pantallaApagada", true)
-            //intent.putExtra("encenderEntreMisterios", true)
-            //ContextCompat.startForegroundService(this, intent)
+                //overlayOscuro.visibility = View.VISIBLE
+            }
         }
 
         override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
             if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
                 val textMensajes = findViewById<TextView>(R.id.textMensajes)
                 val textContadorAveMaria = findViewById<TextView>(R.id.textContadorAveMaria)
+                //val overlayOscuro = findViewById<View>(R.id.overlayOscuro)
                 if(cuentaAveMaria < 9) {
                     textMensajes.text = ""
                     cuentaAveMaria++
@@ -97,7 +98,7 @@
                     vibrarCorto()
                 }
                 else {
-                    cuentaAveMaria++
+                    cuentaAveMaria=10
                     textContadorAveMaria.text = "Avemarías: $cuentaAveMaria"
                     textMensajes.text = "Misterio Completado"
                     vibrarLargo()
@@ -105,6 +106,7 @@
                     val lp = window.attributes
                     lp.screenBrightness = 0.50f  // 50% de brillo
                     window.attributes = lp
+                    //overlayOscuro.visibility = View.INVISIBLE
                 }
                 return true  // Consumimos el evento
             }
@@ -178,6 +180,17 @@
                 imageView.setImageResource(imageRes)
                 textView.text = textosMisterios[index]
             }
+
+            val misterioNombre = misterios[misterioActual]
+            val obra = ObrasArteRepository.obrasArte[misterioNombre]
+
+            if (obra != null) {
+                val intent = Intent(this, MisterioImagenActivity::class.java)
+                intent.putExtra("imagenResId", obra.imagenResId)
+                intent.putExtra("textoObra", "${obra.titulo} - ${obra.autor}")
+                startActivity(intent)
+            }
+
             // Permitir que la pantalla pueda entrar en suspensión nuevamente
             window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
