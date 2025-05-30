@@ -53,5 +53,13 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp" />
 
+    <Button
+    android:id="@+id/btnApagarPantalla"
+    android:text="Apagar pantalla"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="16dp" />
+
+
 </LinearLayout>
 

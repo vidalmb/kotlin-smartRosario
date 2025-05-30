@@ -4,9 +4,12 @@
     import android.widget.ImageView
     import android.widget.TextView
     import androidx.appcompat.app.AppCompatActivity
-    import android.content.Intent
-    import androidx.core.content.ContextCompat
+    import android.os.Vibrator
     import android.widget.Button
+    import android.content.Context
+    import android.view.KeyEvent
+    import android.os.Build
+    import android.os.VibrationEffect
 
     import com.catolicapps.smartrosario.TipoMisterio
 
@@ -14,6 +17,7 @@
 
         private lateinit var imageView: ImageView
         private lateinit var textView: TextView
+        private lateinit var vibrator: Vibrator
 
         private lateinit var tipoMisterioDelDia: TipoMisterio  // ⬅️ Esta línea es clave
         private var misterios: List<String> = listOf()
@@ -31,6 +35,9 @@
             val btnContarAveMaria = findViewById<Button>(R.id.btnContarAveMaria)
             val textContadorAveMaria = findViewById<TextView>(R.id.textContadorAveMaria)
             val textMensajes = findViewById<TextView>(R.id.textMensajes)
+            val btnApagarPantalla = findViewById<Button>(R.id.btnApagarPantalla)
+
+            vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
             tipoMisterioDelDia = obtenerMisteriosDelDia()
             cargarMisterios(tipoMisterioDelDia)
@@ -49,21 +56,59 @@
             }
 
             btnContarAveMaria.setOnClickListener {
-                if(cuentaAveMaria < 10) {
+                if(cuentaAveMaria < 9) {
                     textMensajes.text = ""
                     cuentaAveMaria++
                     textContadorAveMaria.text = "Avemarías: $cuentaAveMaria"
+                    vibrarCorto()
                 }
                 else {
+                    cuentaAveMaria++
+                    textContadorAveMaria.text = "Avemarías: $cuentaAveMaria"
                     textMensajes.text = "Misterio Completado"
+                    vibrarLargo()
                 }
             }
 
+            btnApagarPantalla.setOnClickListener {
+                // Baja el brillo de la pantalla al mínimo
+                val lp = window.attributes
+                lp.screenBrightness = 0.01f  // 1% de brillo
+                window.attributes = lp
+                // Mantener pantalla encencida
+                window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
+
             // Si quieres avanzar con botones volumen, añade aquí también el receiver o lógica.
-            val intent = Intent(this, RosarioService::class.java)
-            intent.putExtra("pantallaApagada", true)
-            intent.putExtra("encenderEntreMisterios", true)
-            ContextCompat.startForegroundService(this, intent)
+            //val intent = Intent(this, RosarioService::class.java)
+            //intent.putExtra("pantallaApagada", true)
+            //intent.putExtra("encenderEntreMisterios", true)
+            //ContextCompat.startForegroundService(this, intent)
+        }
+
+        override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+            if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+                val textMensajes = findViewById<TextView>(R.id.textMensajes)
+                val textContadorAveMaria = findViewById<TextView>(R.id.textContadorAveMaria)
+                if(cuentaAveMaria < 9) {
+                    textMensajes.text = ""
+                    cuentaAveMaria++
+                    textContadorAveMaria.text = "Avemarías: $cuentaAveMaria"
+                    vibrarCorto()
+                }
+                else {
+                    cuentaAveMaria++
+                    textContadorAveMaria.text = "Avemarías: $cuentaAveMaria"
+                    textMensajes.text = "Misterio Completado"
+                    vibrarLargo()
+                    // Brillo de la pantalla al 50%
+                    val lp = window.attributes
+                    lp.screenBrightness = 0.50f  // 50% de brillo
+                    window.attributes = lp
+                }
+                return true  // Consumimos el evento
+            }
+            return super.onKeyDown(keyCode, event)
         }
 
         fun cargarMisterios(tipo: TipoMisterio) {
@@ -133,10 +178,34 @@
                 imageView.setImageResource(imageRes)
                 textView.text = textosMisterios[index]
             }
+            // Permitir que la pantalla pueda entrar en suspensión nuevamente
+            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
 
         fun avanzarMisterio() {
             misterioActual = (misterioActual + 1) % misterios.size
             mostrarMisterio(misterioActual)
+
+            // Brillo de la pantalla al 50%
+            val lp = window.attributes
+            lp.screenBrightness = 0.50f  // 50% de brillo
+            window.attributes = lp
         }
+
+        private fun vibrarCorto() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                vibrator.vibrate(100)
+            }
+        }
+
+        private fun vibrarLargo() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator.vibrate(VibrationEffect.createOneShot(400, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                vibrator.vibrate(400)
+            }
+        }
+
     }
