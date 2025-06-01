@@ -11,6 +11,7 @@
     import android.os.Build
     import android.os.VibrationEffect
     import android.content.Intent
+    import android.os.PowerManager
     import android.view.View
 
     import com.catolicapps.smartrosario.TipoMisterio
@@ -20,6 +21,7 @@
         private lateinit var imageView: ImageView
         private lateinit var textView: TextView
         private lateinit var vibrator: Vibrator
+        private lateinit var wakeLock: PowerManager.WakeLock
 
         private lateinit var tipoMisterioDelDia: TipoMisterio  // ⬅️ Esta línea es clave
         private var misterios: List<String> = listOf()
@@ -30,6 +32,11 @@
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             setContentView(R.layout.activity_rosario)
+
+            // Código para activar el wakelock
+            val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SmartRosario::RosarioWakeLock")
+            wakeLock.acquire()
 
             imageView = findViewById(R.id.imageMisterio)
             textView = findViewById(R.id.textMisterio)
@@ -75,14 +82,19 @@
             }
 
             btnApagarPantalla.setOnClickListener {
+                /*
                 // Baja el brillo de la pantalla al mínimo
                 val lp = window.attributes
                 lp.screenBrightness = 0.01f  // 1% de brillo
                 window.attributes = lp
+                */
+
                 // Mantener pantalla encencida
                 window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-                //overlayOscuro.visibility = View.VISIBLE
+                // Llamada a la actividad que contiene unicamente un fondo negro a pantalla completa
+                val intent = Intent(this, ApagarPantallaActivity::class.java)
+                startActivity(intent)
             }
         }
 
@@ -111,6 +123,13 @@
                 return true  // Consumimos el evento
             }
             return super.onKeyDown(keyCode, event)
+        }
+
+        override fun onDestroy() {
+            super.onDestroy()
+            if (::wakeLock.isInitialized && wakeLock.isHeld) {
+                wakeLock.release()
+            }
         }
 
         fun cargarMisterios(tipo: TipoMisterio) {
